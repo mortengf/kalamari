@@ -92,9 +92,11 @@ Fill in the following values in `.env.local`:
 ```
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
-NEXTAUTH_SECRET=...        # generate with: openssl rand -base64 32
 NEXTAUTH_URL=http://localhost:3000
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=...   # your Firebase project ID
+
+# Optional locally, required in production:
+# NEXTAUTH_SECRET=...                 # generate with: openssl rand -base64 32
 ```
 
 ### 7. Run
