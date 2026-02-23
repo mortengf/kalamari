@@ -8,14 +8,13 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          // Request offline access so we get a refresh token
           access_type: 'offline',
           prompt: 'consent',
           scope: [
             'openid',
             'email',
             'profile',
-            'https://www.googleapis.com/auth/calendar',
+            'https://www.googleapis.com/auth/tasks',
           ].join(' '),
         },
       },
@@ -23,7 +22,6 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account }) {
-      // Persist the OAuth access_token and refresh_token on first sign-in
       if (account) {
         token.accessToken = account.access_token
         token.refreshToken = account.refresh_token
@@ -32,7 +30,6 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      // Expose tokens to the client session
       session.accessToken = token.accessToken as string
       return session
     },
