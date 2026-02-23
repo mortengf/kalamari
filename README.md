@@ -1,10 +1,14 @@
-# 🦑 Kalamari
+# 🦑 Kalamari – Tasks variant
 
-Calendar event template manager. Create reusable multi-part event templates and instantly populate your Google Calendar.
+> **Branch: `feature/tasks`**
+> This branch uses **Google Tasks** instead of Google Calendar events.
+> For the Calendar events version, see the [`main`](https://github.com/mortengf/kalamari/tree/main) branch.
+
+Task template manager. Create reusable multi-part task templates and instantly populate your Google Tasks.
 
 ## Concept
 
-Many real-world appointments consist of several related calendar events, e.g.:
+Many real-world appointments consist of several related tasks, e.g.:
 
 - **Squash / haircut**: "Book!", "The appointment", "Book next"
 - **Tickets**: "Buy", "Print", "The event"
@@ -12,14 +16,14 @@ Many real-world appointments consist of several related calendar events, e.g.:
 - **Travel**: "Check in online", "Departure", "Return"
 - **Meetings**: "Read material", "The meeting", "Write follow-up"
 
-Kalamari lets you define these as reusable templates and create all related events in one click.
+Kalamari lets you define these as reusable templates and create all related tasks in one click, each with a due date calculated relative to an anchor date.
 
 ## Tech Stack
 
 - [Next.js 14](https://nextjs.org/) (Pages Router)
 - [NextAuth.js](https://next-auth.js.org/) with Google OAuth
-- [Google Calendar API](https://developers.google.com/calendar)
-- [Firebase Firestore](https://firebase.google.com/docs/firestore) (template + event group storage)
+- [Google Tasks API](https://developers.google.com/tasks)
+- [Firebase Firestore](https://firebase.google.com/docs/firestore) (template + task group storage)
 - [Tailwind CSS](https://tailwindcss.com/)
 
 ## Getting Started
@@ -29,6 +33,7 @@ Kalamari lets you define these as reusable templates and create all related even
 ```bash
 git clone https://github.com/mortengf/kalamari.git
 cd kalamari
+git checkout feature/tasks
 npm install
 ```
 
@@ -36,7 +41,7 @@ npm install
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project
-3. Enable the **Google Calendar API**
+3. Enable the **Google Tasks API**
 4. Create **OAuth 2.0 credentials** (Web application)
 5. Add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI
 
@@ -44,14 +49,18 @@ npm install
 
 1. Create a project in [Firebase Console](https://console.firebase.google.com/)
 2. Enable **Firestore** in Native mode
-3. Go to Project Settings → Service Accounts → Generate new private key
-4. Base64-encode the JSON: `base64 -i serviceAccount.json`
+3. Authenticate locally via Google Cloud CLI:
+
+```bash
+gcloud auth application-default login
+gcloud auth application-default set-quota-project YOUR_PROJECT_ID
+```
 
 ### 4. Configure environment
 
 ```bash
 cp .env.example .env.local
-# Fill in all values
+# Fill in GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_SECRET, NEXT_PUBLIC_FIREBASE_PROJECT_ID
 ```
 
 ### 5. Run
@@ -61,6 +70,15 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## How tasks work
+
+Each template part gets a **due date** calculated by adding its `offsetMinutes` to the anchor date. Since Google Tasks only support due dates (not times), the time component is ignored — only the date matters.
+
+Example with anchor date 2026-03-15:
+- Part with `offsetMinutes: -4320` (−3 days) → due 2026-03-12
+- Part with `offsetMinutes: 0` (anchor) → due 2026-03-15
+- Part with `offsetMinutes: 1440` (+1 day) → due 2026-03-16
 
 ## Data Model
 
@@ -72,7 +90,6 @@ Open [http://localhost:3000](http://localhost:3000).
   userId: string          // Google email
   name: string
   color: string           // hex
-  defaultCalendarId?: string
   parts: [
     {
       id: string
@@ -96,8 +113,8 @@ Open [http://localhost:3000](http://localhost:3000).
   templateId: string
   templateName: string
   anchorDate: string      // ISO 8601
-  calendarId: string
-  eventIds: string[]      // Google Calendar event IDs
+  calendarId: string      // Google Tasks task list ID
+  eventIds: string[]      // Google Tasks task IDs
   createdAt: string
 }
 ```
@@ -111,6 +128,6 @@ Open [http://localhost:3000](http://localhost:3000).
 | GET | `/api/templates/:id` | Get template |
 | PUT | `/api/templates/:id` | Update template |
 | DELETE | `/api/templates/:id` | Delete template |
-| GET | `/api/event-groups` | List event groups |
-| POST | `/api/event-groups` | Instantiate template → create Calendar events |
-| GET | `/api/calendars` | List user's Google Calendars |
+| GET | `/api/event-groups` | List task groups |
+| POST | `/api/event-groups` | Instantiate template → create Tasks |
+| GET | `/api/calendars` | List user's Google Task lists |
