@@ -4,9 +4,9 @@ import Head from 'next/head'
 import Layout from '@/components/Layout'
 import { Template } from '@/types'
 
-interface Calendar {
+interface TaskList {
   id: string
-  summary: string
+  title: string
 }
 
 export default function SchedulePage() {
@@ -14,9 +14,9 @@ export default function SchedulePage() {
   const { templateId: preselected } = router.query
 
   const [templates, setTemplates] = useState<Template[]>([])
-  const [calendars, setCalendars] = useState<Calendar[]>([])
+  const [taskLists, setTaskLists] = useState<TaskList[]>([])
   const [templateId, setTemplateId] = useState('')
-  const [calendarId, setCalendarId] = useState('')
+  const [taskListId, setTaskListId] = useState('')
   const [anchorDate, setAnchorDate] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -27,10 +27,10 @@ export default function SchedulePage() {
     Promise.all([
       fetch('/api/templates').then(r => r.json()),
       fetch('/api/calendars').then(r => r.json()),
-    ]).then(([tmpl, cals]) => {
+    ]).then(([tmpl, lists]) => {
       setTemplates(tmpl)
-      setCalendars(cals)
-      if (cals.length > 0) setCalendarId(cals[0].id)
+      setTaskLists(lists)
+      if (lists.length > 0) setTaskListId(lists[0].id)
       setLoading(false)
     })
   }, [])
@@ -43,7 +43,7 @@ export default function SchedulePage() {
 
   async function schedule() {
     if (!templateId) { setError('Please select a template'); return }
-    if (!calendarId) { setError('Please select a calendar'); return }
+    if (!taskListId) { setError('Please select a task list'); return }
     if (!anchorDate) { setError('Please pick an anchor date'); return }
     setSaving(true)
     setError('')
@@ -51,7 +51,7 @@ export default function SchedulePage() {
     const res = await fetch('/api/event-groups', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ templateId, calendarId, anchorDate }),
+      body: JSON.stringify({ templateId, calendarId: taskListId, anchorDate }),
     })
 
     if (res.ok) {
@@ -70,16 +70,16 @@ export default function SchedulePage() {
           <div className="mb-8">
             <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
             <p className="text-stone-400 text-sm mt-1">
-              Pick a template, set the anchor date, and create all events at once
+              Pick a template, set the anchor date, and create all tasks at once
             </p>
           </div>
 
           {done ? (
             <div className="bg-stone-900 border border-stone-700 rounded-xl p-8 text-center">
               <div className="text-4xl mb-3">✅</div>
-              <p className="text-stone-100 font-semibold mb-1">Events created!</p>
+              <p className="text-stone-100 font-semibold mb-1">Tasks created!</p>
               <p className="text-stone-400 text-sm mb-6">
-                All parts of <span className="text-amber-400">{selectedTemplate?.name}</span> have been added to your calendar.
+                All parts of <span className="text-amber-400">{selectedTemplate?.name}</span> have been added to your task list.
               </p>
               <div className="flex gap-3 justify-center">
                 <button
@@ -162,31 +162,31 @@ export default function SchedulePage() {
               {/* Anchor date */}
               <section className="bg-stone-900 border border-stone-800 rounded-xl p-6">
                 <label className="block text-xs uppercase tracking-widest text-stone-500 mb-3">
-                  Anchor date & time
+                  Anchor date
                 </label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   value={anchorDate}
                   onChange={e => setAnchorDate(e.target.value)}
                   className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 focus:outline-none focus:border-amber-400"
                 />
                 <p className="text-xs text-stone-500 mt-2">
-                  This is the date/time of the main event. All other parts are offset relative to this.
+                  This is the date of the main event. All tasks are given due dates relative to this.
                 </p>
               </section>
 
-              {/* Calendar */}
+              {/* Task list */}
               <section className="bg-stone-900 border border-stone-800 rounded-xl p-6">
                 <label className="block text-xs uppercase tracking-widest text-stone-500 mb-3">
-                  Calendar
+                  Task list
                 </label>
                 <select
-                  value={calendarId}
-                  onChange={e => setCalendarId(e.target.value)}
+                  value={taskListId}
+                  onChange={e => setTaskListId(e.target.value)}
                   className="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 focus:outline-none focus:border-amber-400"
                 >
-                  {calendars.map(c => (
-                    <option key={c.id} value={c.id}>{c.summary}</option>
+                  {taskLists.map(l => (
+                    <option key={l.id} value={l.id}>{l.title}</option>
                   ))}
                 </select>
               </section>
@@ -198,7 +198,7 @@ export default function SchedulePage() {
                 disabled={saving}
                 className="w-full py-3 bg-amber-400 text-stone-950 font-semibold rounded-xl hover:bg-amber-300 transition-colors disabled:opacity-50"
               >
-                {saving ? 'Creating events…' : 'Create all events in calendar →'}
+                {saving ? 'Creating tasks…' : 'Create all tasks →'}
               </button>
             </div>
           )}
