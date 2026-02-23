@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/firestore'
-import { createEventsFromParts } from '@/lib/googleCalendar'
+import { createTasksFromParts } from '@/lib/googleTasks'
 import { Template, EventGroup } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
-    const { templateId, anchorDate, calendarId } = req.body as {
+    const { templateId, anchorDate, calendarId: taskListId } = req.body as {
       templateId: string
       anchorDate: string
       calendarId: string
@@ -35,15 +35,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!tDoc.exists) return res.status(404).json({ error: 'Template not found' })
     const template = tDoc.data() as Template
 
-    // Create all events in Google Calendar
-    const eventIds = await createEventsFromParts(
+    // Create all tasks in Google Tasks
+    const eventIds = await createTasksFromParts(
       accessToken,
-      calendarId,
+      taskListId,
       anchorDate,
       template.parts.map(p => ({
         title: p.title,
         offsetMinutes: p.offsetMinutes,
-        durationMinutes: p.durationMinutes,
         description: p.description,
       }))
     )
@@ -54,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       templateId,
       templateName: template.name,
       anchorDate,
-      calendarId,
+      calendarId: taskListId,
       eventIds,
       createdAt: new Date().toISOString(),
     }
