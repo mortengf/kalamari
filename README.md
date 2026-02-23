@@ -90,11 +90,11 @@ Fill in the following values in `.env.local`:
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=...                   # required — generate with: openssl rand -base64 32
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=...   # your Firebase project ID
-
-# Optional locally, required in production:
-# NEXTAUTH_SECRET=...                 # generate with: openssl rand -base64 32
 ```
+
+> **Note:** `NEXTAUTH_SECRET` is required even locally. Without it, NextAuth generates a random secret on each server start, which causes session decryption errors every time you restart `npm run dev`.
 
 ### 7. Run
 
