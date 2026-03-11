@@ -2,6 +2,8 @@
 
 Calendar event template manager. Create reusable multi-part event templates and instantly populate your Google Calendar.
 
+> This project was built with [Claude Code](https://claude.ai/code).
+
 > For the Google Tasks version, see the [`feature/tasks`](https://github.com/mortengf/kalamari/tree/feature/tasks) branch.
 
 ## Concept
